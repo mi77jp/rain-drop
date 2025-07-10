@@ -14,11 +14,12 @@ let targetY = 1;
 let scrollSpeed = 0;
 let isPointerDown = false;
 let pointerY = 0;
+let pointerStartY = 0;
 
 const ease = 10;
 const fontSize = 0.3;
 const charGap = 0.45;
-const maxScrollSpeed = window.innerHeight / 20; // px/sec (100%)
+const maxScrollSpeed = window.innerHeight / 4; // px/sec (100%)
 
 // シーン、カメラ、レンダラー
 const scene = new THREE.Scene();
@@ -97,8 +98,8 @@ function updateScrollSpeed() {
   }
 
   const height = window.innerHeight;
-  const ratio = pointerY / height;
-  const normalized = (ratio - 5 / 6) / (1 / 6); // 中心が0、±1が上限
+  const dy = pointerY - pointerStartY;
+  const normalized = dy / (height / 6); // 押し始め位置を中心とする ±1
   const clamped = Math.max(-1, Math.min(1, normalized));
 
   scrollSpeed = clamped * maxScrollSpeed; // px/sec
@@ -107,6 +108,7 @@ function updateScrollSpeed() {
 function handlePointerDown(e) {
   isPointerDown = true;
   pointerY = e.clientY;
+  pointerStartY = e.clientY;
 }
 
 function handlePointerMove(e) {
