@@ -3,5 +3,5 @@ id,text,choiceA,choiceB,emotion,style,note
 1-2-1,"は思った。",1-2-2,,calm,"{""fontSize"":20,""effectType"":""none"",""effectAmount"":0,""effectCurve"":""easeOut""}","分岐:内面へ"
 1-2-2,落ちなければ。,,,calm,"{""fontSize"":20,""effectType"":""none"",""effectAmount"":0,""effectCurve"":""easeOut""}",
 1-3-1,"が頬に当たる。",1-3-2,,calm,"{""fontSize"":20,""effectType"":""none"",""effectAmount"":0,""effectCurve"":""easeOut""}","分岐:行動へ"
-1-3-2,あたりを見渡せばひとりきりになっていた。,,,,,
-,,,,,,
+1-3-2,あたりを見渡せばひとりきりになっていた。,1-3-3,,calm,,
+1-3-3,軽便鉄道けいべんてつどうの東からの一番列車れっしゃが少しあわてたように、こう歌いながらやって来てとまりました。機関車きかんしゃの下からは、力のない湯ゆげが逃にげ出して行き、ほそ長いおかしな形の煙突えんとつからは青いけむりが、ほんの少うし立ちました。,,,,,
