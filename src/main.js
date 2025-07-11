@@ -4,53 +4,62 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { loadScenarioCSV } from './lib/parseCsv.js';
 import { computeVerticalCharPosition } from './layout/verticalText.js';
+
 import { setupPostEffects } from './postfx/setupPostEffects.js';
 import { initPostEffectControl, triggerEffect } from './postfx/trigger.js';
 
-// ポストプロセッシング用 EffectComposer
+// ポストプロセッシング
 let composer;
 
-// グローバル変数
+// グローバル状態
 let font;
 let group;
-let targetY = 1;
-let scrollSpeed = 0;
-let isPointerDown = false;
-let pointerY = 0;
-let pointerStartY = 0;
+let scene, camera, renderer;
+
+const state = {
+  targetY: 1,
+  scrollSpeed: 0,
+  isPointerDown: false,
+  pointerY: 0,
+  pointerStartY: 0,
+};
 
 // 定数
-const ease = 10;// 目標yまでのイージング
-const fontSize = 0.3;// フォントサイズ 基準値
-const charGap = 0.45;// 文字間隔 基準値
-const maxScrollSpeed = window.innerHeight / 7; // px/sec (100%)
+const EASE = 10; // 目標yまでのイージング
+const FONT_SIZE = 0.3; // フォントサイズ 基準値
+const CHAR_GAP = 0.45; // 文字間隔 基準値
+const MAX_SCROLL_SPEED = window.innerHeight / 7; // px/sec (100%)
 const USE_POST_EFFECTS = false;
+const CAMERA_Z = 5;
+const FIXED_CHAR_WIDTH = 0.3;
 
 // デバウンス用
 const debouncedResize = debounce(rePosition, 100);
 
 // シーン、カメラ、レンダラー
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
+// これらの初期化処理は `init()` 内に移すことでライフサイクルの責任を集約できます。また、スコープを `let` に変更して `init()` 内で代入し、他関数と共有すると将来の再初期化や状態管理が容易になります。
 
 function init() {
-  camera.position.z = 5;
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  camera.position.z = CAMERA_Z;
   document.body.appendChild(renderer.domElement);
 
-  // ポストプロセッシング設定
-  const { composer, passes } = setupPostEffects(renderer, scene, camera, USE_POST_EFFECTS);
-  if (USE_POST_EFFECTS) initPostEffectControl(passes); 
+  const { composer: localComposer, passes } = setupPostEffects(renderer, scene, camera, USE_POST_EFFECTS);
+  composer = localComposer;
+  if (USE_POST_EFFECTS) initPostEffectControl(passes);
 
   // イベントリスナー設定
   window.addEventListener('resize', debouncedResize);
   window.addEventListener('pointerdown', handlePointerDown);
   window.addEventListener('pointermove', handlePointerMove);
-  window.addEventListener('touchmove', e => {e.preventDefault()}, { passive: false }); // タッチデバイスのデフォルト動作を無効化  
+  window.addEventListener('touchmove', e => {e.preventDefault()}, { passive: false }); // タッチデバイスのデフォルト動作を無効化
   window.addEventListener('pointerup', handlePointerUp);
-  window.addEventListener('pointercancel', handlePointerUp)
+  window.addEventListener('pointercancel', handlePointerUp);
   window.addEventListener('pointerleave', handlePointerUp);
 
   // フォントの読み込み
@@ -81,19 +90,18 @@ function createTextGroup(data) {
     chars.forEach((char) => {
       const geometry = new TextGeometry(char, {
         font,
-        size: fontSize,
+        size: FONT_SIZE,
         height: 0.01,
       });
 
       // 文字の中心を原点に
-      const fixedCharWidth = 0.3;
-      geometry.translate(-fixedCharWidth / 2, 0, 0);
+      geometry.translate(-FIXED_CHAR_WIDTH / 2, 0, 0);
 
       // マテリアル
       const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
       const mesh = new THREE.Mesh(geometry, material);
 
-      const { x, y } = computeVerticalCharPosition({ char, index: charIndex, charGap });
+      const { x, y } = computeVerticalCharPosition({ char, index: charIndex, charGap: CHAR_GAP });
       mesh.position.set(x, y, 0);
       group.add(mesh);
 
@@ -101,7 +109,7 @@ function createTextGroup(data) {
     });
   });
 
-  group.position.set(0, targetY, 0);
+  group.position.set(0, state.targetY, 0);
   scene.add(group);
 }
 
@@ -111,8 +119,8 @@ function animate() {
   updateScrollSpeed();
 
   if (group) {
-    targetY += scrollSpeed / 900; // フレームあたりの移動量
-    const dy = (targetY - group.position.y) / ease;
+    state.targetY += state.scrollSpeed / 900; // フレームあたりの移動量
+    const dy = (state.targetY - group.position.y) / EASE;
     group.position.y += dy;
   }
 
@@ -124,34 +132,34 @@ function animate() {
 }
 
 function updateScrollSpeed() {
-  if (!isPointerDown) {
-    scrollSpeed = 0;
+  if (!state.isPointerDown) {
+    state.scrollSpeed = 0;
     return;
   }
 
   const height = window.innerHeight;
-  const dy = pointerY - pointerStartY;
+  const dy = state.pointerY - state.pointerStartY;
   const normalized = dy / (height / 6); // 押し始め位置を中心とする ±1
   const clamped = Math.max(-1, Math.min(1, normalized));
 
-  scrollSpeed = clamped * maxScrollSpeed; // px/sec
+  state.scrollSpeed = clamped * MAX_SCROLL_SPEED; // px/sec
 }
 
 function handlePointerDown(e) {
-  isPointerDown = true;
-  pointerY = e.clientY;
-  pointerStartY = e.clientY;
+  state.isPointerDown = true;
+  state.pointerY = e.clientY;
+  state.pointerStartY = e.clientY;
 }
 
 function handlePointerMove(e) {
-  if (isPointerDown) {
-    pointerY = e.clientY;
+  if (state.isPointerDown) {
+    state.pointerY = e.clientY;
   }
 }
 
 function handlePointerUp() {
-  isPointerDown = false;
-  scrollSpeed = 0;
+  state.isPointerDown = false;
+  state.scrollSpeed = 0;
 }
 
 function rePosition() {
@@ -160,6 +168,7 @@ function rePosition() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+// debounce 関数を `lib/` などに切り出して共通ユーティリティとして管理すると、他モジュールでも再利用できて保守性が高まります。
 function debounce(func, wait) {
   let timeout;
   return function (...args) {
@@ -168,4 +177,5 @@ function debounce(func, wait) {
   };
 }
 
+// 将来的な SSR や外部フレームワークとの統合を考慮するなら、イベントリスナーのラップや明示的な `start()` 関数のエクスポートも検討できます。
 document.addEventListener('DOMContentLoaded', init);
