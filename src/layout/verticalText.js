@@ -1,7 +1,7 @@
 // src/app2/layout/verticalText.js
 
-const smallKana = ['ぁ','ぃ','ぅ','ぇ','ぉ','っ','ゃ','ゅ','ょ','ァ','ィ','ゥ','ェ','ォ','ッ','ャ','ュ','ョ'];
 const punctuation = ['、', '。'];
+const smallKana = ['ぁ','ぃ','ぅ','ぇ','ぉ','っ','ゃ','ゅ','ょ','ァ','ィ','ゥ','ェ','ォ','ッ','ャ','ュ','ョ'];
 
 /**
  * 縦書き中の文字の表示位置（X, Y）を計算する
@@ -16,14 +16,22 @@ export function computeVerticalCharPosition({ char, index, charGap }) {
   const isPunctuation = punctuation.includes(char);
   const isSmallKana = smallKana.includes(char);
 
+  const xBase = 0;
+  const xOffset = isPunctuation
+    ? charGap * 0.5
+    : isSmallKana
+    ? charGap * 0
+    : 0;
+    
   const yBase = -index * charGap;
   const yOffset = isPunctuation
     ? charGap * -0.5
     : isSmallKana
     ? charGap * -0.15
     : 0;
+    
 
-  const x = isPunctuation ? charGap * 0.5 : 0;
+  const x = xBase + xOffset;
   const y = yBase - yOffset;
 
   return { x, y };

@@ -5,8 +5,6 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { loadScenarioCSV } from './lib/parseCsv.js';
 import { computeVerticalCharPosition } from './layout/verticalText.js';
 
-//console.log('BASE_URL:', import.meta.env.BASE_URL);
-
 // グローバル変数
 let font;
 let group;
@@ -30,7 +28,6 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
-
 
 function init() {
   camera.position.z = 5;
@@ -69,10 +66,8 @@ function loadScenario() {
         });
 
         // 文字の中心を原点に
-        geometry.computeBoundingBox();
-        const bbox = geometry.boundingBox;
-        const xOffset = (bbox.max.x - bbox.min.x) / 2;
-        geometry.translate(-xOffset, 0, 0);
+        const fixedCharWidth = 0.3;
+        geometry.translate(-fixedCharWidth / 2, 0, 0);
 
         // マテリアル
         const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
