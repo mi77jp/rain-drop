@@ -4,7 +4,7 @@ import { defineConfig } from 'vite'
 export default defineConfig(({ mode }) => {
   console.log('VITE MODE:', mode);
   return   {
-    base: mode === 'production' ? '/rain-drop/' : './',
+    base: mode === 'production' ? '/rain-drop/' : '/',
     root: 'src',
     publicDir: '../public',
     build: {
