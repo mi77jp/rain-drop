@@ -4,16 +4,11 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { loadScenarioCSV } from './lib/parseCsv.js';
 import { computeVerticalCharPosition } from './layout/verticalText.js';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { GlitchPass } from 'three/examples/jsm/postprocessing/GlitchPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { RGBShiftShader } from 'three/examples/jsm/shaders/RGBShiftShader.js';
-import { DotScreenShader } from 'three/examples/jsm/shaders/DotScreenShader.js';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { setupPostEffects } from './postfx/setupPostEffects.js';
+import { initPostEffectControl, triggerEffect } from './postfx/trigger.js';
 
+// ポストプロセッシング用 EffectComposer
 let composer;
-
 
 // グローバル変数
 let font;
@@ -24,10 +19,12 @@ let isPointerDown = false;
 let pointerY = 0;
 let pointerStartY = 0;
 
-const ease = 10;
-const fontSize = 0.3;
-const charGap = 0.45;
-const maxScrollSpeed = window.innerHeight / 10; // px/sec (100%)
+// 定数
+const ease = 10;// 目標yまでのイージング
+const fontSize = 0.3;// フォントサイズ 基準値
+const charGap = 0.45;// 文字間隔 基準値
+const maxScrollSpeed = window.innerHeight / 7; // px/sec (100%)
+const USE_POST_EFFECTS = false;
 
 // デバウンス用
 const debouncedResize = debounce(rePosition, 100);
@@ -43,33 +40,11 @@ function init() {
   camera.position.z = 5;
   document.body.appendChild(renderer.domElement);
 
-  const postEffects = {
-    glitch: new GlitchPass(),
-    bloom: new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85),
-    rgbShift: new ShaderPass(RGBShiftShader),
-    dotScreen: new ShaderPass(DotScreenShader)
-  };
-  // DotScreen
-  postEffects.dotScreen.uniforms.scale.value = 5;
-  postEffects.dotScreen.uniforms.angle.value = Math.PI / 4;
+  // ポストプロセッシング設定
+  const { composer, passes } = setupPostEffects(renderer, scene, camera, USE_POST_EFFECTS);
+  if (USE_POST_EFFECTS) initPostEffectControl(passes); 
 
-  composer = new EffectComposer(renderer);
-
-  // レンダーパスの追加
-  composer.addPass(new RenderPass(scene, camera));
-  Object.values(postEffects).forEach((pass) => {
-    pass.enabled = false;
-    composer.addPass(pass);
-  });
-
-  window.triggerEffect = (key, duration = 300) => {
-    const pass = postEffects[key];
-    if (!pass) return;
-    pass.enabled = true;
-    setTimeout(() => pass.enabled = false, duration);
-  };
-
-  // イベントリスナーの設定
+  // イベントリスナー設定
   window.addEventListener('resize', debouncedResize);
   window.addEventListener('pointerdown', handlePointerDown);
   window.addEventListener('pointermove', handlePointerMove);
@@ -141,8 +116,11 @@ function animate() {
     group.position.y += dy;
   }
 
-  composer.render();
-  //renderer.render(scene, camera);
+  if (USE_POST_EFFECTS && composer) {
+    composer.render();
+  } else {
+    renderer.render(scene, camera);
+  }
 }
 
 function updateScrollSpeed() {
