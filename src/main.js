@@ -21,6 +21,9 @@ const fontSize = 0.3;
 const charGap = 0.45;
 const maxScrollSpeed = window.innerHeight / 4; // px/sec (100%)
 
+// デバウンス用
+const debouncedResize = debounce(rePosition, 100);
+
 // シーン、カメラ、レンダラー
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -28,14 +31,6 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-function disableDefaultTouchScroll() {
-  
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  disableDefaultTouchScroll();
-  init();
-});
 
 function init() {
   camera.position.z = 5;
@@ -44,7 +39,6 @@ function init() {
   window.addEventListener('pointerdown', handlePointerDown);
   window.addEventListener('pointermove', handlePointerMove);
   window.addEventListener('touchmove', e => {
-    handlePointerMove(e);
     e.preventDefault();
   }, { passive: false });
   window.addEventListener('pointerup', handlePointerUp);
@@ -156,4 +150,4 @@ function debounce(func, wait) {
   };
 }
 
-const debouncedResize = debounce(rePosition, 100);
+document.addEventListener('DOMContentLoaded', init);
