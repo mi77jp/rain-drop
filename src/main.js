@@ -61,6 +61,13 @@ function loadScenario() {
           height: 0.01,
         });
 
+        // 文字の中心を原点に
+        geometry.computeBoundingBox();
+        const bbox = geometry.boundingBox;
+        const xOffset = (bbox.max.x - bbox.min.x) / 2;
+        geometry.translate(-xOffset, 0, 0);
+
+        // マテリアル
         const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
         const mesh = new THREE.Mesh(geometry, material);
 
