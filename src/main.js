@@ -28,7 +28,14 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-document.addEventListener('DOMContentLoaded', init);
+function disableDefaultTouchScroll() {
+  
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  disableDefaultTouchScroll();
+  init();
+});
 
 function init() {
   camera.position.z = 5;
@@ -36,8 +43,12 @@ function init() {
   window.addEventListener('resize', debouncedResize);
   window.addEventListener('pointerdown', handlePointerDown);
   window.addEventListener('pointermove', handlePointerMove);
+  window.addEventListener('touchmove', e => {
+    handlePointerMove(e);
+    e.preventDefault();
+  }, { passive: false });
   window.addEventListener('pointerup', handlePointerUp);
-  window.addEventListener('pointercancel', handlePointerUp); // ← 追加
+  window.addEventListener('pointercancel', handlePointerUp)
   window.addEventListener('pointerleave', handlePointerUp);
 
   const loader = new FontLoader();
