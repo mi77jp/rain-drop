@@ -37,7 +37,7 @@ function init() {
   window.addEventListener('pointerup', handlePointerUp);
 
   const loader = new FontLoader();
-  loader.load('/fonts/noto-serif-jp-regular.typeface.json', (fontLoaded) => {
+  loader.load(import.meta.env.BASE_URL + '/fonts/noto-serif-jp-regular.typeface.json', (fontLoaded) => {
     font = fontLoaded;
     loadScenario();
   });
@@ -46,7 +46,7 @@ function init() {
 }
 
 function loadScenario() {
-  loadScenarioCSV('/data/scenario.csv').then(data => {
+  loadScenarioCSV(import.meta.env.BASE_URL + '/data/scenario.csv').then(data => {
     group = new THREE.Group();
     let charIndex = 0;
 
