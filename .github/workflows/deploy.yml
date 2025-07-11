@@ -2,7 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   deploy:
@@ -16,14 +17,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
 
-      # ✅ 必須：pnpmをCIにインストール（これがなければpnpmは使えません）
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8  # あなたのpnpmのバージョンに合わせてよい
-          run_install: false
+        run: npm install -g pnpm
 
       - name: Install dependencies
         run: pnpm install
