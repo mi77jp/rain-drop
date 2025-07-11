@@ -35,6 +35,8 @@ function init() {
   window.addEventListener('pointerdown', handlePointerDown);
   window.addEventListener('pointermove', handlePointerMove);
   window.addEventListener('pointerup', handlePointerUp);
+  window.addEventListener('pointercancel', handlePointerUp); // ← 追加
+  window.addEventListener('pointerleave', handlePointerUp);
 
   const loader = new FontLoader();
   loader.load(import.meta.env.BASE_URL + '/fonts/noto-serif-jp-regular.typeface.json', (fontLoaded) => {
@@ -81,7 +83,7 @@ function animate() {
   updateScrollSpeed();
 
   if (group) {
-    targetY += scrollSpeed / 60; // フレームあたりの移動量
+    targetY += scrollSpeed / 600; // フレームあたりの移動量
     const dy = (targetY - group.position.y) / ease;
     group.position.y += dy;
   }
