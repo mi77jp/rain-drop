@@ -18,10 +18,11 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
 
+      # ✅ 必須：pnpmをCIにインストール（これがなければpnpmは使えません）
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 8  # あなたのpnpmのバージョンに合わせてよい
           run_install: false
 
       - name: Install dependencies
@@ -34,7 +35,7 @@ jobs:
         run: echo "" > dist/.nojekyll
 
       - name: Remove README.md from dist
-        run: rm -f dist/README.md
+        run: rm -f dist/README.md || true
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
