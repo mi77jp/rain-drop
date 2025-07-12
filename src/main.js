@@ -6,7 +6,7 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { loadScenarioCSV } from './lib/parseCsv.js';
 import { computeVerticalCharPosition } from './layout/verticalText.js';
 import { setupPostEffects } from './postfx/setupPostEffects.js';
-import { initPostEffectControl, triggerEffect } from './postfx/trigger.js';
+import { initPostEffectControl/*, triggerEffect*/ } from './postfx/trigger.js';
 
 // ポストプロセッシング用 EffectComposer
 let composer;
@@ -14,7 +14,7 @@ let composer;
 // グローバル状態
 let font;// フォント自体
 let group;// テキストグループ
-let scene, camera, renderer;
+let scene, camera, renderer;// Three.js シーン、カメラ、レンダラー
 
 const state = {
   targetY: 1,
@@ -36,19 +36,17 @@ const FIXED_CHAR_WIDTH = 0.3;
 // デバウンス用
 const debouncedResize = debounce(rePosition, 100);
 
-// シーン、カメラ、レンダラー
-// これらの初期化処理は `init()` 内に移すことでライフサイクルの責任を集約できます。また、スコープを `let` に変更して `init()` 内で代入し、他関数と共有すると将来の再初期化や状態管理が容易になります。
-
 function init() {
+  // シーン、カメラ、レンダラー
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
-
   camera.position.z = CAMERA_Z;
   document.body.appendChild(renderer.domElement);
 
+  // ポストプロセッシングの設定
   const { composer: localComposer, passes } = setupPostEffects(renderer, scene, camera, USE_POST_EFFECTS);
   composer = localComposer;
   if (USE_POST_EFFECTS) initPostEffectControl(passes);
@@ -57,10 +55,10 @@ function init() {
   window.addEventListener('resize', debouncedResize);
   window.addEventListener('pointerdown', handlePointerDown);
   window.addEventListener('pointermove', handlePointerMove);
-  window.addEventListener('touchmove', e => {e.preventDefault()}, { passive: false }); // タッチデバイスのデフォルト動作を無効化
   window.addEventListener('pointerup', handlePointerUp);
   window.addEventListener('pointercancel', handlePointerUp);
   window.addEventListener('pointerleave', handlePointerUp);
+  window.addEventListener('touchmove', e => {e.preventDefault()}, { passive: false }); // タッチデバイスのデフォルト動作を無効化
 
   // フォントの読み込み
   const loader = new FontLoader();
