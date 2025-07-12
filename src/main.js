@@ -1,19 +1,19 @@
+// src/main.js
 import './lib/reset.css';
 import * as THREE from 'three';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { loadScenarioCSV } from './lib/parseCsv.js';
 import { computeVerticalCharPosition } from './layout/verticalText.js';
-
 import { setupPostEffects } from './postfx/setupPostEffects.js';
 import { initPostEffectControl, triggerEffect } from './postfx/trigger.js';
 
-// ポストプロセッシング
+// ポストプロセッシング用 EffectComposer
 let composer;
 
 // グローバル状態
-let font;
-let group;
+let font;// フォント自体
+let group;// テキストグループ
 let scene, camera, renderer;
 
 const state = {
